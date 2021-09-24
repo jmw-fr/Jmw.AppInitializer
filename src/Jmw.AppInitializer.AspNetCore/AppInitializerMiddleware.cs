@@ -4,6 +4,7 @@
 
 namespace Jmw.AppInitializer.AspNetCore
 {
+    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using Dawn;
     using Microsoft.AspNetCore.Http;
@@ -28,41 +29,43 @@ namespace Jmw.AppInitializer.AspNetCore
         /// <summary>
         /// Processes a request.
         /// </summary>
-        /// <param name="context">Http context.</param>
+        /// <param name="httpContext">Http context.</param>
         /// <param name="appInitializer">Instance of AppInitializer.</param>
         /// <returns>Async task.</returns>
-        public async Task Invoke(HttpContext context, AppInitializer appInitializer)
+        public async Task Invoke(HttpContext httpContext, AppInitializer appInitializer)
         {
-            if (appInitializer != null)
+            var path = httpContext.Request.Path.Value;
+
+            if (appInitializer != null && !Regex.IsMatch(path, $"^/appInitializer"))
             {
                 switch (appInitializer.InitializerStatus)
                 {
                     case InitializerStatus.OnError:
-                        context.Response.StatusCode = 503;
-                        context.Response.ContentType = "text/plain; charset=utf-8";
-                        await context.Response.WriteAsync("AppInitializer failed.");
+                        httpContext.Response.StatusCode = 503;
+                        httpContext.Response.ContentType = "text/plain; charset=utf-8";
+                        await httpContext.Response.WriteAsync("AppInitializer failed.");
                         break;
 
                     case InitializerStatus.NeverRun:
-                        context.Response.StatusCode = 503;
-                        context.Response.ContentType = "text/plain; charset=utf-8";
-                        await context.Response.WriteAsync("AppInitializer not run yet.");
+                        httpContext.Response.StatusCode = 503;
+                        httpContext.Response.ContentType = "text/plain; charset=utf-8";
+                        await httpContext.Response.WriteAsync("AppInitializer not run yet.");
                         break;
 
                     case InitializerStatus.Initializing:
-                        context.Response.StatusCode = 503;
-                        context.Response.ContentType = "text/plain; charset=utf-8";
-                        await context.Response.WriteAsync("AppInitializer initializing.");
+                        httpContext.Response.StatusCode = 503;
+                        httpContext.Response.ContentType = "text/plain; charset=utf-8";
+                        await httpContext.Response.WriteAsync("AppInitializer initializing.");
                         break;
 
                     default:
-                        await next(context);
+                        await next(httpContext);
                         break;
                 }
             }
             else
             {
-                await next(context);
+                await next(httpContext);
             }
         }
     }
