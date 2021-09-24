@@ -7,6 +7,7 @@ namespace Microsoft.AspNetCore.Builder
     using System;
     using Dawn;
     using Jmw.AppInitializer;
+    using Jmw.AppInitializer.AspNetCore;
     using Microsoft.Extensions.DependencyInjection;
 
     /// <summary>
@@ -35,6 +36,16 @@ namespace Microsoft.AspNetCore.Builder
             {
                 configuration(AppInitializerConfiguration.Instance);
             }
+
+            if (AppInitializerConfiguration.Instance.UseMiddleWare)
+            {
+                appBuilder.UseMiddleware<AppInitializerMiddleware>();
+            }
+
+            Guard.Argument(
+                AppInitializerConfiguration.Instance.MaxTries,
+                $"{nameof(AppInitializerConfiguration)}.{nameof(AppInitializerConfiguration.MaxTries)}")
+                .NotZero();
 
             initializer.StartInitializer(AppInitializerConfiguration.Instance);
 

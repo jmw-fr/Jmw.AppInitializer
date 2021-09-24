@@ -4,7 +4,6 @@
 
 namespace Jmw.AppInitializer
 {
-    using System;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -15,8 +14,7 @@ namespace Jmw.AppInitializer
         /// <summary>
         /// Function performing the initialization Task.
         /// </summary>
-        /// <param name="serviceProvider">Instance of <see cref="IServiceProvider"/>.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        Task InitializeAsync(IServiceProvider serviceProvider);
+        Task InitializeAsync();
     }
 }
