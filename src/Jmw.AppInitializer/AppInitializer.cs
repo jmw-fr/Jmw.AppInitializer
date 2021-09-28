@@ -10,6 +10,7 @@ namespace Jmw.AppInitializer
     using System.Reactive.Linq;
     using System.Threading.Tasks;
     using Dawn;
+    using Jmw.AppInitializer.Factories;
     using Microsoft.Extensions.DependencyInjection;
 
     /// <summary>
@@ -82,8 +83,8 @@ namespace Jmw.AppInitializer
 
             appInitializerHistories.Clear();
             appInitializerHistories.AddRange(serviceProvider
-                .GetServices<IInitializer>()
-                .Select(i => new InitializerHistory(i)));
+                .GetServices<Factory>()
+                .Select(factory => new InitializerHistory(factory)));
 
             InitializerStatus = InitializerStatus.Initializing;
             Begin = DateTimeOffset.Now;
@@ -108,11 +109,17 @@ namespace Jmw.AppInitializer
 
                     try
                     {
-                        await initializerHistory.Initializer.InitializeAsync();
+                        using (var scope = serviceProvider.CreateScope())
+                        {
+                            var initializer = initializerHistory.Factory.Construct(scope.ServiceProvider)
+                                ?? throw new InvalidOperationException($"Factory {initializerHistory.Factory.GetType().Name} Failed to construct initializer");
 
-                        initializerHistory.InitializerStatus = InitializerStatus.Initialized;
+                            await initializer.InitializeAsync();
 
-                        trial.Executed();
+                            initializerHistory.InitializerStatus = InitializerStatus.Initialized;
+
+                            trial.Executed();
+                        }
                     }
                     catch (Exception ex)
                     {

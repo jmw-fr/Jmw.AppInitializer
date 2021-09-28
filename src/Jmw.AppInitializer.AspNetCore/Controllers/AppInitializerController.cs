@@ -45,7 +45,7 @@ namespace Jmw.AppInitializer.AspNetCore.Controllers
                 Initializers = this.appInitializer.Initializers
                     .Select(h => new InitializerExecution()
                     {
-                         InitializerName = h.Initializer.GetType().Name,
+                         InitializerName = h.InitializerName,
                          InitializerStatus = h.InitializerStatus,
                          Trials = h.Tries.Select(t => new InitializerTrial
                          {

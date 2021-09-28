@@ -6,6 +6,7 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     using Dawn;
     using Jmw.AppInitializer;
+    using Jmw.AppInitializer.Factories;
 
     /// <summary>
     /// Extenions for configuring DI.
@@ -24,7 +25,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Guard.Argument(initializer, nameof(initializer)).NotNull();
 
             return services
-                .AddSingleton(initializer)
+                .AddSingleton(new InstanceFactory(initializer))
                 .AddAppInitializer();
         }
 
@@ -40,7 +41,8 @@ namespace Microsoft.Extensions.DependencyInjection
             Guard.Argument(services, nameof(services)).NotNull();
 
             return services
-                .AddTransient<IInitializer, T>()
+                .AddScoped<T>()
+                .AddSingleton<Factory, DIFactory<T>>()
                 .AddAppInitializer();
         }
 

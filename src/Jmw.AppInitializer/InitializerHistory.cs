@@ -7,6 +7,7 @@ namespace Jmw.AppInitializer
     using System;
     using System.Collections.Generic;
     using Dawn;
+    using Jmw.AppInitializer.Factories;
 
     /// <summary>
     /// History of an initializer.
@@ -18,18 +19,13 @@ namespace Jmw.AppInitializer
         /// <summary>
         /// Initializes a new instance of the <see cref="InitializerHistory"/> class.
         /// </summary>
-        /// <param name="initializer">Initializer instance.</param>
-        internal InitializerHistory(IInitializer initializer)
+        /// <param name="factory">Initializer factory.</param>
+        internal InitializerHistory(Factory factory)
         {
-            Initializer = Guard.Argument(initializer, nameof(initializer)).NotNull().Value;
+            Factory = Guard.Argument(factory, nameof(factory)).NotNull().Value;
             InitializerStatus = InitializerStatus.NeverRun;
             tries = new List<InitializerTrial>();
         }
-
-        /// <summary>
-        /// Gets the instance of the initializer.
-        /// </summary>
-        public IInitializer Initializer { get; }
 
         /// <summary>
         /// Gets the list of initialization tries.
@@ -40,6 +36,16 @@ namespace Jmw.AppInitializer
         /// Gets the initializer status.
         /// </summary>
         public InitializerStatus InitializerStatus { get; internal set; }
+
+        /// <summary>
+        /// Gets the initializer name.
+        /// </summary>
+        public string InitializerName => Factory.InitializerName;
+
+        /// <summary>
+        /// Gets the initializer factory.
+        /// </summary>
+        internal Factory Factory { get; }
 
         /// <summary>
         /// Adds a trial.
