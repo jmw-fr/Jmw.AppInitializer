@@ -40,7 +40,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Guard.Argument(services, nameof(services)).NotNull();
 
             return services
-                .AddSingleton<IInitializer, T>()
+                .AddTransient<IInitializer, T>()
                 .AddAppInitializer();
         }
 
