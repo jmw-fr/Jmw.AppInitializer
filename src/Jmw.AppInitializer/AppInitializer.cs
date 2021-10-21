@@ -7,7 +7,9 @@ namespace Jmw.AppInitializer
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reactive;
     using System.Reactive.Linq;
+    using System.Reactive.Subjects;
     using System.Threading.Tasks;
     using Dawn;
     using Jmw.AppInitializer.Factories;
@@ -22,6 +24,8 @@ namespace Jmw.AppInitializer
 
         private readonly List<InitializerHistory> appInitializerHistories;
 
+        private readonly BehaviorSubject<InitializerStatus> statut;
+
         private IDisposable initTimer;
 
         private AppInitializerConfiguration appInitializerConfiguration;
@@ -34,7 +38,7 @@ namespace Jmw.AppInitializer
         {
             this.serviceProvider = Guard.Argument(serviceProvider, nameof(serviceProvider)).NotNull().Value;
             appInitializerHistories = new List<InitializerHistory>();
-            InitializerStatus = InitializerStatus.NeverRun;
+            statut = new BehaviorSubject<InitializerStatus>(InitializerStatus.NeverRun);
         }
 
         /// <summary>
@@ -60,7 +64,12 @@ namespace Jmw.AppInitializer
         /// <summary>
         /// Gets the initializer status.
         /// </summary>
-        public InitializerStatus InitializerStatus { get; private set; }
+        public InitializerStatus InitializerStatus => statut.Value;
+
+        /// <summary>
+        /// Gets the initializer status as an <see cref="IObservable{T}"/>.
+        /// </summary>
+        public IObservable<InitializerStatus> InitializerStatusAsObservable => statut;
 
         /// <summary>
         /// Gets the initializers history.
@@ -86,7 +95,8 @@ namespace Jmw.AppInitializer
                 .GetServices<Factory>()
                 .Select(factory => new InitializerHistory(factory)));
 
-            InitializerStatus = InitializerStatus.Initializing;
+            statut.OnNext(InitializerStatus.Initializing);
+
             Begin = DateTimeOffset.Now;
             initTimer = Observable
                 .Interval(configuration.Interval)
@@ -133,13 +143,13 @@ namespace Jmw.AppInitializer
                 if (!failed)
                 {
                     End = DateTimeOffset.Now;
-                    InitializerStatus = InitializerStatus.Initialized;
+                    statut.OnNext(InitializerStatus.Initialized);
                     initTimer?.Dispose();
                 }
                 else if (this.appInitializerConfiguration.MaxTries > 0 && Tries >= this.appInitializerConfiguration.MaxTries)
                 {
                     End = DateTimeOffset.Now;
-                    InitializerStatus = InitializerStatus.OnError;
+                    statut.OnNext(InitializerStatus.OnError);
                     initTimer?.Dispose();
                 }
             }

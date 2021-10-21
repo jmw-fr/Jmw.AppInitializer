@@ -4,6 +4,8 @@
 
 namespace Jmw.AppInitializer.AspNetCore
 {
+    using System.Reactive.Linq;
+    using System.Reactive.Threading.Tasks;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using Dawn;
@@ -38,7 +40,12 @@ namespace Jmw.AppInitializer.AspNetCore
 
             if (appInitializer != null && !Regex.IsMatch(path, $"^/appInitializer"))
             {
-                switch (appInitializer.InitializerStatus)
+                var initializerStatus = await appInitializer
+                    .InitializerStatusAsObservable
+                    .Where(i => i != InitializerStatus.Initializing)
+                    .ToTask(httpContext.RequestAborted);
+
+                switch (initializerStatus)
                 {
                     case InitializerStatus.OnError:
                         httpContext.Response.StatusCode = 503;
@@ -50,12 +57,6 @@ namespace Jmw.AppInitializer.AspNetCore
                         httpContext.Response.StatusCode = 503;
                         httpContext.Response.ContentType = "text/plain; charset=utf-8";
                         await httpContext.Response.WriteAsync("AppInitializer not run yet.");
-                        break;
-
-                    case InitializerStatus.Initializing:
-                        httpContext.Response.StatusCode = 503;
-                        httpContext.Response.ContentType = "text/plain; charset=utf-8";
-                        await httpContext.Response.WriteAsync("AppInitializer initializing.");
                         break;
 
                     default:
