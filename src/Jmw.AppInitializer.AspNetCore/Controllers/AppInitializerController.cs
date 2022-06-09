@@ -5,8 +5,13 @@
 namespace Jmw.AppInitializer.AspNetCore.Controllers
 {
     using System.Linq;
+    using System.Reactive.Linq;
+    using System.Reactive.Threading.Tasks;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Dawn;
     using Jmw.AppInitializer.AspNetCore.DTO;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
 
     /// <summary>
@@ -29,9 +34,9 @@ namespace Jmw.AppInitializer.AspNetCore.Controllers
         }
 
         /// <summary>
-        /// Test.
+        /// Returns the status of the initializer.
         /// </summary>
-        /// <returns>d.</returns>
+        /// <returns>Status of the initializer.</returns>
         [HttpGet]
         public AppInitializerStatus Get()
         {
@@ -56,6 +61,23 @@ namespace Jmw.AppInitializer.AspNetCore.Controllers
                          }),
                     }),
             };
+        }
+
+        /// <summary>
+        /// IIS Warmup function. It waits until the warmup finished intializing.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>No Content.</returns>
+        [HttpGet("WarmUp")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public async Task<IActionResult> GetWarmUpAsync(CancellationToken cancellationToken)
+        {
+            await this.appInitializer
+                .InitializerStatusAsObservable
+                .FirstAsync(i => i != InitializerStatus.Initializing)
+                .ToTask(cancellationToken);
+
+            return Ok();
         }
     }
 }
