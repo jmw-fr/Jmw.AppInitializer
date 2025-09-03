@@ -2,54 +2,50 @@
 // Copyright Weeger Jean-Marc under MIT Licence. See https://opensource.org/licenses/mit-license.php.
 // </copyright>
 
-namespace Microsoft.AspNetCore.Builder
+namespace Microsoft.AspNetCore.Builder;
+
+using System;
+using Ardalis.GuardClauses;
+using Jmw.AppInitializer;
+using Jmw.AppInitializer.AspNetCore;
+using Microsoft.Extensions.DependencyInjection;
+
+/// <summary>
+/// Extensions for <see cref="IApplicationBuilder"/>.
+/// </summary>
+public static class ApplicationBuilderExtensions
 {
-    using System;
-    using Dawn;
-    using Jmw.AppInitializer;
-    using Jmw.AppInitializer.AspNetCore;
-    using Microsoft.Extensions.DependencyInjection;
-
     /// <summary>
-    /// Extensions for <see cref="IApplicationBuilder"/>.
+    /// Configure and start the <see cref="AppInitializer"/>.
     /// </summary>
-    public static class ApplicationBuilderExtensions
+    /// <param name="appBuilder">Application builder.</param>
+    /// <param name="serviceProvider">Instance of <see cref="IServiceProvider"/>.</param>
+    /// <param name="configuration">Optional configuration function.</param>
+    /// <typeparam name="TApplicationBuilder">Type of application builder.</typeparam>
+    /// <returns>Provided application builder.</returns>
+    public static TApplicationBuilder UseAppInitializer<TApplicationBuilder>(
+        this TApplicationBuilder appBuilder,
+        IServiceProvider serviceProvider,
+        Action<AppInitializerConfiguration> configuration = null)
+        where TApplicationBuilder : IApplicationBuilder
     {
-        /// <summary>
-        /// Configure and start the <see cref="AppInitializer"/>.
-        /// </summary>
-        /// <param name="appBuilder">Application builder.</param>
-        /// <param name="serviceProvider">Instance of <see cref="IServiceProvider"/>.</param>
-        /// <param name="configuration">Optional configuration function.</param>
-        /// <returns>Provided application builder.</returns>
-        public static IApplicationBuilder UseAppInitializer(
-            this IApplicationBuilder appBuilder,
-            IServiceProvider serviceProvider,
-            Action<AppInitializerConfiguration> configuration = null)
+        Guard.Against.Null(appBuilder);
+        Guard.Against.Null(serviceProvider);
+
+        var initializer = serviceProvider.GetRequiredService<AppInitializer>();
+
+        configuration?.Invoke(AppInitializerConfiguration.Instance);
+
+        if (AppInitializerConfiguration.Instance.UseMiddleWare)
         {
-            Guard.Argument(appBuilder, nameof(appBuilder)).NotNull();
-            Guard.Argument(serviceProvider, nameof(serviceProvider)).NotNull();
-
-            var initializer = serviceProvider.GetRequiredService<AppInitializer>();
-
-            if (configuration != null)
-            {
-                configuration(AppInitializerConfiguration.Instance);
-            }
-
-            if (AppInitializerConfiguration.Instance.UseMiddleWare)
-            {
-                appBuilder.UseMiddleware<AppInitializerMiddleware>();
-            }
-
-            Guard.Argument(
-                AppInitializerConfiguration.Instance.MaxTries,
-                $"{nameof(AppInitializerConfiguration)}.{nameof(AppInitializerConfiguration.MaxTries)}")
-                .NotZero();
-
-            initializer.StartInitializer(AppInitializerConfiguration.Instance);
-
-            return appBuilder;
+            appBuilder.UseMiddleware<AppInitializerMiddleware>();
         }
+
+        Guard.Against.NegativeOrZero(
+            AppInitializerConfiguration.Instance.MaxTries);
+
+        initializer.StartInitializer(AppInitializerConfiguration.Instance);
+
+        return appBuilder;
     }
 }

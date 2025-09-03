@@ -7,11 +7,10 @@ namespace Jmw.AppInitializer
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reactive;
     using System.Reactive.Linq;
     using System.Reactive.Subjects;
     using System.Threading.Tasks;
-    using Dawn;
+    using Ardalis.GuardClauses;
     using Jmw.AppInitializer.Factories;
     using Microsoft.Extensions.DependencyInjection;
 
@@ -36,7 +35,7 @@ namespace Jmw.AppInitializer
         /// <param name="serviceProvider">Instance of <see cref="IServiceProvider"/>.</param>
         internal AppInitializer(IServiceProvider serviceProvider)
         {
-            this.serviceProvider = Guard.Argument(serviceProvider, nameof(serviceProvider)).NotNull().Value;
+            this.serviceProvider = Guard.Against.Null(serviceProvider);
             appInitializerHistories = new List<InitializerHistory>();
             statut = new BehaviorSubject<InitializerStatus>(InitializerStatus.NeverRun);
         }
@@ -49,7 +48,7 @@ namespace Jmw.AppInitializer
         /// <summary>
         /// Gets the number of initialization tries.
         /// </summary>
-        public int MaxTries => appInitializerConfiguration?.MaxTries ?? -1;
+        public int MaxTries => appInitializerConfiguration?.MaxTries ?? 5;
 
         /// <summary>
         /// Gets the initializer execution begin date.
@@ -82,7 +81,7 @@ namespace Jmw.AppInitializer
         /// <param name="configuration">Configuration to apply.</param>
         public void StartInitializer(AppInitializerConfiguration configuration)
         {
-            Guard.Argument(configuration, nameof(configuration)).NotNull();
+            Guard.Against.Null(configuration);
 
             initTimer?.Dispose();
             initTimer = null;
@@ -146,7 +145,7 @@ namespace Jmw.AppInitializer
                     statut.OnNext(InitializerStatus.Initialized);
                     initTimer?.Dispose();
                 }
-                else if (this.appInitializerConfiguration.MaxTries > 0 && Tries >= this.appInitializerConfiguration.MaxTries)
+                else if (Tries >= this.appInitializerConfiguration.MaxTries)
                 {
                     End = DateTimeOffset.Now;
                     statut.OnNext(InitializerStatus.OnError);

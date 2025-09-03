@@ -6,37 +6,30 @@ namespace Jmw.AppInitializer.AspNetCore
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using Dawn;
+    using Ardalis.GuardClauses;
     using Microsoft.Extensions.Diagnostics.HealthChecks;
 
     /// <summary>
     /// Health check for AppInitializer. Reports Unhealthy only if init failed.
     /// </summary>
-    public class AppInitializerHealthCheck : IHealthCheck
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="AppInitializerHealthCheck"/> class.
+    /// </remarks>
+    /// <param name="appInitializer">Instance of the AppInitializer.</param>
+    public class AppInitializerHealthCheck(AppInitializer appInitializer)
+        : IHealthCheck
     {
-        private readonly AppInitializer appInitializer;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AppInitializerHealthCheck"/> class.
-        /// </summary>
-        /// <param name="appInitializer">Instance of the AppInitializer.</param>
-        public AppInitializerHealthCheck(AppInitializer appInitializer)
-        {
-            this.appInitializer = Guard.Argument(appInitializer, nameof(appInitializer)).NotNull();
-        }
+        private readonly AppInitializer appInitializer = Guard.Against.Null(appInitializer);
 
         /// <inheritdoc/>
         public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
         {
-            switch (this.appInitializer.InitializerStatus)
+            return this.appInitializer.InitializerStatus switch
             {
-                case InitializerStatus.NeverRun:
-                case InitializerStatus.Initializing:
-                case InitializerStatus.Initialized:
-                    return Task.FromResult(HealthCheckResult.Healthy());
-                default:
-                    return Task.FromResult(HealthCheckResult.Unhealthy());
-            }
+                InitializerStatus.NeverRun or InitializerStatus.Initializing => Task.FromResult(HealthCheckResult.Degraded()),
+                InitializerStatus.Initialized => Task.FromResult(HealthCheckResult.Healthy()),
+                _ => Task.FromResult(HealthCheckResult.Unhealthy()),
+            };
         }
     }
 }

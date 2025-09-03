@@ -5,7 +5,7 @@
 namespace Jmw.AppInitializer.Factories
 {
     using System;
-    using Dawn;
+    using Ardalis.GuardClauses;
 
     /// <summary>
     /// Instance Factory.
@@ -20,7 +20,7 @@ namespace Jmw.AppInitializer.Factories
         /// <param name="initializer">Initializer instance.</param>
         internal InstanceFactory(IInitializer initializer)
         {
-            this.initializer = Guard.Argument(initializer, nameof(initializer)).NotNull().Value;
+            this.initializer = Guard.Against.Null(initializer);
         }
 
         /// <inheritdoc/>

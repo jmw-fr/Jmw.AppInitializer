@@ -4,7 +4,7 @@
 
 namespace Microsoft.Extensions.DependencyInjection
 {
-    using Dawn;
+    using Ardalis.GuardClauses;
     using Jmw.AppInitializer;
     using Jmw.AppInitializer.Factories;
 
@@ -21,8 +21,8 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns>Modified DI service collection.</returns>
         public static IServiceCollection AddInitializer(this IServiceCollection services, IInitializer initializer)
         {
-            Guard.Argument(services, nameof(services)).NotNull();
-            Guard.Argument(initializer, nameof(initializer)).NotNull();
+            Guard.Against.Null(services);
+            Guard.Against.Null(initializer);
 
             return services
                 .AddSingleton(new InstanceFactory(initializer))
@@ -38,7 +38,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IServiceCollection AddInitializer<T>(this IServiceCollection services)
             where T : class, IInitializer
         {
-            Guard.Argument(services, nameof(services)).NotNull();
+            Guard.Against.Null(services);
 
             return services
                 .AddScoped<T>()
@@ -48,6 +48,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static IServiceCollection AddAppInitializer(this IServiceCollection services)
         {
+            Guard.Against.Null(services);
+
             return services
                 .AddSingleton(s => new AppInitializer(s))
                 .AddTransient(s => AppInitializerConfiguration.Instance);

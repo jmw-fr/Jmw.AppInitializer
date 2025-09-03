@@ -17,9 +17,9 @@ namespace Jmw.AppInitializer
         public static AppInitializerConfiguration Instance { get; } = new AppInitializerConfiguration();
 
         /// <summary>
-        /// Gets or sets the number of initialization. If negative, infinite retries.
+        /// Gets or sets the number of initialization. Can not be 0 or negative.
         /// </summary>
-        public int MaxTries { get; set; } = -1;
+        public int MaxTries { get; set; } = 5;
 
         /// <summary>
         /// Gets or sets the interval between each retry.

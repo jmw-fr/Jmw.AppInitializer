@@ -9,7 +9,7 @@ namespace Jmw.AppInitializer.AspNetCore.Controllers
     using System.Reactive.Threading.Tasks;
     using System.Threading;
     using System.Threading.Tasks;
-    using Dawn;
+    using Ardalis.GuardClauses;
     using Jmw.AppInitializer.AspNetCore.DTO;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
@@ -17,21 +17,17 @@ namespace Jmw.AppInitializer.AspNetCore.Controllers
     /// <summary>
     /// App Initializer controller.
     /// </summary>
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="AppInitializerController"/> class.
+    /// Constructor.
+    /// </remarks>
+    /// <param name="appInitializer">Instance of AppInitializer.</param>
     [ApiController]
     [Route("appInitializer")]
-    public class AppInitializerController : ControllerBase
+    public class AppInitializerController(AppInitializer appInitializer)
+        : ControllerBase
     {
-        private readonly AppInitializer appInitializer;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AppInitializerController"/> class.
-        /// Constructor.
-        /// </summary>
-        /// <param name="appInitializer">Instance of AppInitializer.</param>
-        public AppInitializerController(AppInitializer appInitializer)
-        {
-            this.appInitializer = Guard.Argument(appInitializer, nameof(appInitializer));
-        }
+        private readonly AppInitializer appInitializer = Guard.Against.Null(appInitializer);
 
         /// <summary>
         /// Returns the status of the initializer.

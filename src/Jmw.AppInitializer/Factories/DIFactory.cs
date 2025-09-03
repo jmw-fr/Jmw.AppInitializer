@@ -5,7 +5,7 @@
 namespace Jmw.AppInitializer.Factories
 {
     using System;
-    using Dawn;
+    using Ardalis.GuardClauses;
     using Microsoft.Extensions.DependencyInjection;
 
     /// <summary>
@@ -21,7 +21,7 @@ namespace Jmw.AppInitializer.Factories
         /// <inheritdoc/>
         public override IInitializer Construct(IServiceProvider serviceProvider)
         {
-            Guard.Argument(serviceProvider, nameof(serviceProvider)).NotNull();
+            Guard.Against.Null(serviceProvider);
 
             return serviceProvider.GetService<T>();
         }

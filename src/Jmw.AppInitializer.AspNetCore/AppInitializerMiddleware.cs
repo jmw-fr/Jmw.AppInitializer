@@ -8,25 +8,20 @@ namespace Jmw.AppInitializer.AspNetCore
     using System.Reactive.Threading.Tasks;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
-    using Dawn;
+    using Ardalis.GuardClauses;
     using Microsoft.AspNetCore.Http;
 
     /// <summary>
     /// Middleware returning http 503 status if initializer is not finished.
     /// </summary>
-    public class AppInitializerMiddleware
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="AppInitializerMiddleware"/> class.
+    /// </remarks>
+    /// <param name="next">Next delegate.</param>
+    public partial class AppInitializerMiddleware(
+        RequestDelegate next)
     {
-        private readonly RequestDelegate next;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AppInitializerMiddleware"/> class.
-        /// </summary>
-        /// <param name="next">Next delegate.</param>
-        public AppInitializerMiddleware(
-            RequestDelegate next)
-        {
-            this.next = Guard.Argument(next, nameof(next)).NotNull();
-        }
+        private readonly RequestDelegate next = Guard.Against.Null(next);
 
         /// <summary>
         /// Processes a request.
@@ -38,7 +33,7 @@ namespace Jmw.AppInitializer.AspNetCore
         {
             var path = httpContext.Request.Path.Value;
 
-            if (appInitializer != null && !Regex.IsMatch(path, $"^/appInitializer"))
+            if (appInitializer != null && !RegExpAppInitializer().IsMatch(path))
             {
                 var initializerStatus = await appInitializer
                     .InitializerStatusAsObservable
@@ -69,5 +64,8 @@ namespace Jmw.AppInitializer.AspNetCore
                 await next(httpContext);
             }
         }
+
+        [GeneratedRegex("^/appInitializer")]
+        private static partial Regex RegExpAppInitializer();
     }
 }

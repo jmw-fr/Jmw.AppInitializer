@@ -6,7 +6,7 @@ namespace Jmw.AppInitializer
 {
     using System;
     using System.Collections.Generic;
-    using Dawn;
+    using Ardalis.GuardClauses;
     using Jmw.AppInitializer.Factories;
 
     /// <summary>
@@ -22,7 +22,7 @@ namespace Jmw.AppInitializer
         /// <param name="factory">Initializer factory.</param>
         internal InitializerHistory(Factory factory)
         {
-            Factory = Guard.Argument(factory, nameof(factory)).NotNull().Value;
+            Factory = Guard.Against.Null(factory);
             InitializerStatus = InitializerStatus.NeverRun;
             tries = new List<InitializerTrial>();
         }

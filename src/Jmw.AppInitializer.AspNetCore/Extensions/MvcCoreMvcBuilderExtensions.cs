@@ -4,7 +4,7 @@
 
 namespace Microsoft.Extensions.DependencyInjection
 {
-    using Dawn;
+    using Ardalis.GuardClauses;
     using Jmw.AppInitializer.AspNetCore.Controllers;
 
     /// <summary>
@@ -19,7 +19,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns>Modified MVC Builder.</returns>
         public static IMvcBuilder AddAppInitializerPart(this IMvcBuilder builder)
         {
-            Guard.Argument(builder, nameof(builder)).NotNull();
+            Guard.Against.Null(builder);
 
             builder.AddApplicationPart(typeof(AppInitializerController).Assembly);
 
